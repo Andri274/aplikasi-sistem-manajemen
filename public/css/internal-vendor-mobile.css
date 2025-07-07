@@ -1,0 +1,107 @@
+/* ======== MOBILE FIRST STYLING ======== */
+body {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar {
+    width: 100%;
+    position: static;
+    background: #f3f4f6;
+    padding: 10px;
+}
+
+.content {
+    margin: 0;
+    padding: 10px;
+}
+
+table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 8px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+}
+
+button,
+.btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+.modal {
+    width: 95%;
+    margin: 0 auto;
+}
+
+/* ======== INTERNAL STYLING ======== */
+body.internal {
+    background-color: #f8fafc;
+}
+
+body.internal .sidebar {
+    background: #16a34a;
+    /* hijau internal */
+    color: white;
+}
+
+/* ======== VENDOR STYLING ======== */
+body.vendor {
+    background-color: #fefce8;
+}
+
+body.vendor .sidebar {
+    background: #f97316;
+    /* orange vendor */
+    color: white;
+}
+
+/* ======== DESKTOP (>768px) ======== */
+@media (min-width: 768px) {
+    .sidebar {
+        width: 220px;
+        position: fixed;
+        height: 100vh;
+    }
+
+    .content {
+        margin-left: 220px;
+        padding: 20px;
+    }
+
+    table th,
+    table td {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    button,
+    .btn {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95%;
+    max-width: 500px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+}

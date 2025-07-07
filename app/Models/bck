@@ -1,0 +1,34 @@
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ProduksiVendor extends Model
+{
+    use HasFactory;
+
+    protected $table = 'produksi_vendor';
+
+    protected $fillable = [
+        'vendor_id',        // FK ke tabel vendors
+        'tanggal',
+        'team_operator',
+        'mk1',
+        'mk2',
+        'mk3',
+        'mesin_besar',
+        'hasil_produksi',
+        'penanggung_jawab',
+    ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id');
+    }
+
+    public function laporan()
+    {
+        return $this->hasOne(LaporanProduksiVendor::class, 'produksi_vendor_id');
+    }
+}

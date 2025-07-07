@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\SlipGaji;
+use App\Models\DetailGaji;
+use App\Models\Karyawan;
+use Illuminate\Support\Facades\DB;
+use PDF;
+
+class SlipGajiController extends Controller
+{
+    public function index()
+    {
+        $karyawans = Karyawan::all();
+        $slips = SlipGaji::with('karyawan')->latest()->get();
+        return view('slip.index', compact('karyawans', 'slips'));
+    }
+
+    public function create()
+    {
+        $karyawans = Karyawan::all();
+        return view('slip.create', compact('karyawans'));
+    }
+
+    public function store(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $slip = SlipGaji::create([
+                'karyawan_id'     => $request->karyawan_id,
+                'periode_mulai'   => $request->periode_mulai,
+                'periode_selesai' => $request->periode_selesai,
+                'total_pendapatan'=> $request->total_pendapatan,
+                'total_potongan'  => $request->total_potongan ?? 0,
+                'total_bersih'    => $request->total_bersih ?? ($request->total_pendapatan - $request->total_potongan),
+            ]);
+
+            // Simpan Pendapatan
+            foreach ($request->pendapatan as $item) {
+                DetailGaji::create([
+                    'slip_gaji_id'   => $slip->id,
+                    'nama_komponen'  => $item['nama_komponen'],
+                    'nilai'          => $item['nilai'],
+                    'jumlah'         => $item['jumlah'],
+                    'satuan'         => $item['satuan'],
+                    'keterangan'     => $item['keterangan'],
+                    'tipe'           => 'pendapatan',
+                ]);
+            }
+
+            // Simpan Potongan (jika ada)
+            if ($request->has('potongan')) {
+                foreach ($request->potongan as $item) {
+                    DetailGaji::create([
+                        'slip_gaji_id'   => $slip->id,
+                        'nama_komponen'  => $item['nama_komponen'],
+                        'nilai'          => $item['nilai'],
+                        'keterangan'     => $item['keterangan'],
+                        'tipe'           => 'potongan',
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('slip.index')->with('success', 'Slip gaji berhasil disimpan!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menyimpan slip: ' . $e->getMessage());
+        }
+    }
+
+    public function show($id)
+    {
+        $slip = SlipGaji::with(['karyawan', 'detailGajis'])->findOrFail($id);
+        return view('slip.show', compact('slip'));
+    }
+
+    public function destroy($id)
+    {
+        $slip = SlipGaji::findOrFail($id);
+        $slip->delete();
+        return redirect()->route('slip.index')->with('success', 'Slip berhasil dihapus');
+    }
+
+    public function cetak($id)
+    {
+        $slip = SlipGaji::with(['karyawan', 'detailGajis'])->findOrFail($id);
+
+        $periodeText = \Carbon\Carbon::parse($slip->periode_mulai)->format('d') .
+            '–' . \Carbon\Carbon::parse($slip->periode_selesai)->translatedFormat('d F Y');
+        $mingguKe = \Carbon\Carbon::parse($slip->periode_mulai)->weekOfMonth;
+
+        return PDF::loadView('slip.pdf', compact('slip', 'periodeText', 'mingguKe'))
+            ->stream('Slip-Gaji-' . $slip->karyawan->nama . '.pdf');
+    }
+}
